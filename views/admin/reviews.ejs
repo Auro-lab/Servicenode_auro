@@ -1,0 +1,98 @@
+<%- include('../partials/header') %>
+
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">
+        <i class="bi bi-star-fill text-warning me-2"></i>Technician Review Reports
+      </h2>
+      <p class="text-secondary small mb-0">System-wide customer feedback, technician ratings, and performance reports</p>
+    </div>
+    <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Dashboard
+    </a>
+  </div>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger bg-danger text-white border-0 alert-dismissible fade show mb-4" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+    </div>
+  <% } %>
+
+  <!-- Summary Metric Card -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card card-dark-blue p-3 shadow-sm border-0 d-flex flex-row align-items-center gap-3">
+        <div class="p-3 rounded-3" style="background: rgba(255, 193, 7, 0.15); color: #ffc107;">
+          <i class="bi bi-star fs-2"></i>
+        </div>
+        <div>
+          <span class="text-secondary small d-block">Total Reviews</span>
+          <strong class="fs-3 text-white"><%= reviews ? reviews.length : 0 %></strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews Table Card -->
+  <div class="card card-dark-blue shadow-sm">
+    <div class="card-header bg-transparent border-bottom border-secondary-subtle py-3 d-flex justify-content-between align-items-center">
+      <h6 class="fw-bold mb-0 text-uppercase tracking-wider text-secondary small">
+        <i class="bi bi-journal-text me-2"></i>Submitted Feedback Log
+      </h6>
+    </div>
+    <div class="card-body p-0">
+      <% if (typeof reviews !== 'undefined' && reviews.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle mb-0" style="background-color: transparent;">
+            <thead>
+              <tr class="text-secondary small text-uppercase" style="border-bottom: 1px solid var(--border-blue);">
+                <th class="ps-4">Ticket</th>
+                <th>Technician</th>
+                <th>Customer</th>
+                <th>Overall Rating</th>
+                <th>Speed Score</th>
+                <th>Customer Comment</th>
+                <th class="pe-4">Submitted Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% reviews.forEach(r => { %>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td class="ps-4 text-secondary">
+                    <strong>#<%= r.Ticket ? r.Ticket.id : r.ticketId %></strong>
+                  </td>
+                  <td class="fw-bold text-info">
+                    <%= r.technician ? r.technician.name : 'Unassigned' %>
+                  </td>
+                  <td class="text-white">
+                    <%= r.customer ? r.customer.name : 'Anonymous' %>
+                  </td>
+                  <td>
+                    <span class="badge bg-warning text-dark px-2 py-1 fs-6">
+                      <%= r.rating %> ★
+                    </span>
+                  </td>
+                  <td class="text-secondary fw-semibold">
+                    <%= r.speedRating %>/5
+                  </td>
+                  <td class="text-secondary small text-truncate" style="max-width: 280px;">
+                    <%= r.comment || 'No comment provided.' %>
+                  </td>
+                  <td class="pe-4 small text-secondary">
+                    <%= new Date(r.createdAt).toLocaleDateString() %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p class="text-secondary text-center my-4 py-3">No review reports submitted in the system yet.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

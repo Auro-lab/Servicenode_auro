@@ -1,0 +1,119 @@
+<%- include('../partials/header') %>
+
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-md-9 col-lg-8">
+      
+      <!-- Top Navigation Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold mb-1">
+            <i class="bi bi-ticket-plus-fill me-2" style="color: var(--accent-blue);"></i>Submit Support Ticket
+          </h2>
+          <p class="text-secondary small mb-0">Provide issue details below to open an IT assistance request</p>
+        </div>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+      </div>
+
+      <!-- Main Form Card -->
+      <div class="card card-dark-blue shadow-sm border-0">
+        <div class="card-header bg-transparent border-bottom border-secondary-subtle py-3">
+          <h6 class="fw-bold mb-0 text-uppercase tracking-wider text-secondary small">
+            <i class="bi bi-pencil-square me-2"></i>Ticket Specification Form
+          </h6>
+        </div>
+        <div class="card-body p-4 p-sm-5">
+
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger bg-danger text-white border-0 shadow-sm alert-dismissible fade show mb-4" role="alert">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+
+          <form action="/tickets/create" method="POST">
+            
+            <!-- Subject Title -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-secondary small mb-2">
+                Ticket Subject / Title <span class="text-danger">*</span>
+              </label>
+              <input 
+                type="text" 
+                name="title" 
+                class="form-control text-white" 
+                style="background-color: #0d1527; border: 1px solid var(--border-blue); border-radius: 10px; padding: 0.75rem 1rem;" 
+                placeholder="e.g., Cannot connect to VPN or Printer Not Responding" 
+                required
+              />
+            </div>
+
+            <!-- Category & Priority -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small mb-2">
+                  Category <span class="text-danger">*</span>
+                </label>
+                <select 
+                  name="categoryId" 
+                  class="form-select text-white" 
+                  style="background-color: #0d1527; border: 1px solid var(--border-blue); border-radius: 10px; padding: 0.75rem 1rem;" 
+                  required
+                >
+                  <option value="" disabled selected>Select issue category...</option>
+                  <% if (typeof categories !== 'undefined' && categories) { %>
+                    <% categories.forEach(cat => { %>
+                      <option value="<%= cat.id %>"><%= cat.name %></option>
+                    <% }); %>
+                  <% } %>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-secondary small mb-2">Priority Level</label>
+                <select 
+                  name="priority" 
+                  class="form-select text-white" 
+                  style="background-color: #0d1527; border: 1px solid var(--border-blue); border-radius: 10px; padding: 0.75rem 1rem;"
+                >
+                  <option value="Low" selected>Low (Standard Query)</option>
+                  <option value="Medium">Medium (Work Impaired)</option>
+                  <option value="High">High (Critical / System Down)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-secondary small mb-2">
+                Detailed Description <span class="text-danger">*</span>
+              </label>
+              <textarea 
+                name="description" 
+                class="form-control text-white" 
+                style="background-color: #0d1527; border: 1px solid var(--border-blue); border-radius: 10px; padding: 0.75rem 1rem;" 
+                rows="5" 
+                placeholder="Provide details, error messages, or steps to reproduce the problem..." 
+                required
+              ></textarea>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary-subtle">
+              <a href="/dashboard" class="btn btn-outline-secondary px-4 py-2">Cancel</a>
+              <button type="submit" class="btn btn-glow px-4 py-2 fw-semibold">
+                Submit Ticket <i class="bi bi-send ms-1"></i>
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
