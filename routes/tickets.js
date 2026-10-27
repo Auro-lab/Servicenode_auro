@@ -70,7 +70,7 @@ router.get('/dashboard', async (req, res) => {
       total: tickets.length,
       open: tickets.filter(t => t.status === 'Open').length,
       inProgress: tickets.filter(t => t.status === 'In Progress').length,
-      closed: tickets.filter(t => t.status === 'Closed' || t.status === 'Resolved' || t.status === 'Completed').length
+      closed: tickets.filter(t => t.status === 'Closed' || t.status === 'Resolved').length
     };
 
     res.render('dashboard', {
@@ -212,6 +212,10 @@ router.post('/tickets/:id/update', async (req, res) => {
 
     // Update status/tech based on role
     if (status && (currentUser.role === 'tech' || currentUser.role === 'admin')) {
+      const allowedStatuses = ['Open', 'In Progress', 'Resolved', 'Closed'];
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).send('Invalid status selected.');
+      }
       ticket.status = status;
     }
 

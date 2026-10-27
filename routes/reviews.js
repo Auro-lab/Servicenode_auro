@@ -1,85 +1,52 @@
 const express = require('express');
 const router = express.Router();
-const { Review, Ticket, User } = require('../models');
+const { Review } = require('../models');
+const { authenticateToken } = require('../middleware/auth');
 
-// Middleware to protect routes (ensures user is logged in via JWT/session)
-const requireAuth = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'You must be logged in to leave a review.' });
-  }
-  next();
-};
-
-// 1. Submit a review for a technician
-router.post('/add', requireAuth, async (req, res) => {
+// POST /reviews/add
+router.post('/add', authenticateToken, async (req, res) => {
   try {
     const { ticketId, technicianId, rating, speedRating, comment } = req.body;
-    const userId = req.user.id;
+    const customerId = req.user.id || req.user.userId; // Handles variation in JWT payload keys
 
-    // Optional: Check if a review already exists for this ticket
-    if (ticketId) {
-      const existingReview = await Review.findOne({ where: { ticketId } });
+    // 1. Validation Check
+    if (!rating) {
+      return res.status(400).json({ error: 'Please select a rating score.' });
+    }
+
+    // 2. Parse numbers cleanly
+    const parsedTicketId = ticketId ? parseInt(ticketId, 10) : null;
+    const parsedTechId = technicianId ? parseInt(technicianId, 10) : null;
+    const parsedRating = parseInt(rating, 10);
+    const parsedSpeed = speedRating ? parseInt(speedRating, 10) : null;
+
+    // 3. Prevent duplicate reviews on the same ticket
+    if (parsedTicketId) {
+      const existingReview = await Review.findOne({ where: { ticketId: parsedTicketId } });
       if (existingReview) {
         return res.status(400).json({ error: 'You have already reviewed this service ticket.' });
       }
     }
 
-    // Create the review
+    // 4. Save Review to DB
     const newReview = await Review.create({
-      userId,
-      technicianId,
-      ticketId: ticketId || null,
-      rating: parseInt(rating, 10),
-      speedRating: speedRating ? parseInt(speedRating, 10) : null,
-      comment
+      customerId: parseInt(customerId, 10),
+      technicianId: parsedTechId,
+      ticketId: parsedTicketId,
+      rating: parsedRating,
+      speedRating: parsedSpeed,
+      comment: comment ? comment.trim() : ''
     });
 
-    res.status(201).json({ message: 'Review submitted successfully!', review: newReview });
+    return res.status(201).json({ message: 'Review submitted successfully!', review: newReview });
+
   } catch (error) {
-    console.error('Error submitting review:', error);
-    res.status(500).json({ error: 'Failed to submit review.' });
-  }
-});
+    // Print the full DB error to your terminal console for easy debugging
+    console.error('❌ Detailed Review Submission Error:', error);
 
-// 2. Get all reviews & average rating for a specific technician
-router.get('/technician/:id', async (req, res) => {
-  try {
-    const technicianId = req.params.id;
-
-    const reviews = await Review.findAll({
-      where: { technicianId },
-      include: [
-        { model: User, as: 'customer', attributes: ['id', 'name', 'email'] }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
-
-    // Calculate overall average and speed average
-    const totalReviews = reviews.length;
-    let avgRating = 0;
-    let avgSpeedRating = 0;
-
-    if (totalReviews > 0) {
-      const sumRating = reviews.reduce((acc, r) => acc + r.rating, 0);
-      avgRating = (sumRating / totalReviews).toFixed(1);
-
-      const speedReviews = reviews.filter(r => r.speedRating !== null);
-      if (speedReviews.length > 0) {
-        const sumSpeed = speedReviews.reduce((acc, r) => acc + r.speedRating, 0);
-        avgSpeedRating = (sumSpeed / speedReviews.length).toFixed(1);
-      }
-    }
-
-    res.json({
-      technicianId,
-      totalReviews,
-      avgRating,
-      avgSpeedRating,
-      reviews
-    });
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-    res.status(500).json({ error: 'Failed to fetch reviews.' });
+    // Return specific Sequelize or Database validation message if available
+    const errorMsg = error.errors ? error.errors[0].message : error.message;
+    return res.status(500).json({ error: `Database error: ${errorMsg}` });
   }
 });
 

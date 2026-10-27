@@ -136,7 +136,7 @@
           </table>
 
           <!-- 🌟 RATE TECHNICIAN BUTTON (When Completed or Resolved) -->
-          <% if ((ticket.status === 'Completed' || ticket.status === 'Resolved') && ticket.techId && user && (user.id === ticket.userId || user.role === 'customer' || user.role === 'user')) { %>
+          <% if ((ticket.status === 'Completed' || ticket.status === 'Resolved' || ticket.status === 'Closed') && ticket.techId && user && (user.id === ticket.userId || user.role === 'customer' || user.role === 'user')) { %>
             <hr class="my-3 border-secondary-subtle">
             <div class="p-3 rounded-3 text-center" style="background-color: #0d1527; border: 1px solid rgba(255,193,7,0.3);">
               <p class="small text-secondary mb-2 fw-semibold">How was <%= ticket.Technician ? ticket.Technician.name : 'the technician' %>'s service?</p>
@@ -169,7 +169,6 @@
                   <option value="Open" <%= ticket.status === 'Open' ? 'selected' : '' %>>Open</option>
                   <option value="In Progress" <%= ticket.status === 'In Progress' ? 'selected' : '' %>>In Progress</option>
                   <option value="Resolved" <%= ticket.status === 'Resolved' ? 'selected' : '' %>>Resolved</option>
-                  <option value="Completed" <%= ticket.status === 'Completed' ? 'selected' : '' %>>Completed</option>
                   <option value="Closed" <%= ticket.status === 'Closed' ? 'selected' : '' %>>Closed</option>
                 </select>
               </div>
@@ -307,9 +306,10 @@ document.getElementById('reviewForm')?.addEventListener('submit', async function
   try {
     const response = await fetch('/reviews/add', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: new Headers({
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }),
       body: JSON.stringify(data)
     });
 
@@ -317,7 +317,7 @@ document.getElementById('reviewForm')?.addEventListener('submit', async function
 
     if (response.ok) {
       alertBox.className = 'alert alert-success mt-3 mb-0';
-      alertBox.textContent = 'Thank you! Your review has been submitted successfully.';
+      alertBox.textContent = result.message || 'Thank you! Your review has been submitted successfully.';
       alertBox.classList.remove('d-none');
       
       setTimeout(() => {
@@ -330,8 +330,9 @@ document.getElementById('reviewForm')?.addEventListener('submit', async function
       submitBtn.disabled = false;
     }
   } catch (error) {
+    console.error('Submission error:', error);
     alertBox.className = 'alert alert-danger mt-3 mb-0';
-    alertBox.textContent = 'An error occurred. Please try again.';
+    alertBox.textContent = 'Failed to communicate with server: ' + error.message;
     alertBox.classList.remove('d-none');
     submitBtn.disabled = false;
   }

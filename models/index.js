@@ -1,4 +1,3 @@
-// models/index.js
 const sequelize = require('../config/database');
 
 const User = require('./User');
@@ -27,15 +26,15 @@ User.hasMany(Comment, { foreignKey: 'userId' });
 Comment.belongsTo(User, { foreignKey: 'userId' });
 
 // Notifications
+User.hasMany(Notification, { foreignKey: 'userId' });
 Notification.belongsTo(User, { foreignKey: 'userId' });
+
+Ticket.hasMany(Notification, { foreignKey: 'ticketId' });
 Notification.belongsTo(Ticket, { foreignKey: 'ticketId' });
 
-User.hasMany(Notification, { foreignKey: 'userId' });
-Ticket.hasMany(Notification, { foreignKey: 'ticketId' });
-
-// Review Associations
-User.hasMany(Review, { foreignKey: 'userId', as: 'givenReviews' });
-Review.belongsTo(User, { foreignKey: 'userId', as: 'customer' });
+// Review Associations (Updated customerId foreignKey)
+User.hasMany(Review, { foreignKey: 'customerId', as: 'givenReviews' });
+Review.belongsTo(User, { foreignKey: 'customerId', as: 'customer' });
 
 User.hasMany(Review, { foreignKey: 'technicianId', as: 'receivedReviews' });
 Review.belongsTo(User, { foreignKey: 'technicianId', as: 'technician' });

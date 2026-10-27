@@ -23,7 +23,7 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// 3. JWT Decoding Middleware (Runs BEFORE notificationMiddleware & Routes)
+// 3. JWT Decoding Middleware
 app.use((req, res, next) => {
   const token = req.cookies?.token;
   if (token) {
@@ -32,16 +32,13 @@ app.use((req, res, next) => {
       const JWT_SECRET = process.env.JWT_SECRET || 'servicenode_super_secret_key_123!';
       const decodedUser = jwt.verify(token, JWT_SECRET);
       
-      // Attach user object to req and res.locals for EJS views
       req.user = decodedUser;
       res.locals.user = decodedUser;
 
-      // Keep session in sync with JWT
       if (!req.session.user) {
         req.session.user = decodedUser;
       }
     } catch (err) {
-      // Clear token if invalid or expired
       res.clearCookie('token');
       req.user = null;
       res.locals.user = null;
@@ -51,34 +48,41 @@ app.use((req, res, next) => {
     res.locals.user = null;
   }
 
-  // Default notifications fallback variable
   res.locals.notifications = res.locals.notifications || [];
   next();
 });
 
-// 4. Notification Middleware (Now has access to req.user / req.session.user)
+// 4. Notification Middleware
 const notificationMiddleware = require('./middleware/notifications');
 app.use(notificationMiddleware);
 
-// 5. Load & Mount Routes
+// 5. Load Routes
 const authRoutes = require('./routes/auth');
 const ticketRoutes = require('./routes/tickets');
 const categoryRoutes = require('./routes/categories');
 const adminRoutes = require('./routes/admin');
-const reviewRoutes = require('./routes/reviews'); // 👈 ADDED: Import Review Routes
+const reviewRoutes = require('./routes/reviews');
 
-app.use('/', authRoutes);
-app.use('/', ticketRoutes);
-app.use('/', categoryRoutes);
-app.use('/', adminRoutes);
-app.use('/reviews', reviewRoutes); // 👈 ADDED: Mount Review Routes at /reviews
+// 6. Mount Routes in CORRECT Order
+app.use('/reviews', reviewRoutes);  // API endpoints first
+app.use('/', authRoutes);           // Auth routes (/login, /register, /logout)
+app.use('/', ticketRoutes);         // Tickets & dashboard
+app.use('/', categoryRoutes);       // Categories
+app.use('/admin', adminRoutes);     // Admin scoped routes ONLY under /admin
 
 app.get('/test', (req, res) => {
   res.send('<h1>Express is working!</h1>');
 });
 
-// Sync Database & Start Server
+// 7. Global Server Error Handler
+app.use((err, req, res, next) => {
+  console.error('🔥 Global Server Error:', err.stack);
+  res.status(500).send(`Server Error: ${err.message}`);
+});
+
+// 8. Sync Database & Start Server
 const PORT = process.env.PORT || 3000;
+
 sequelize.sync({ alter: true }).then(async () => {
   console.log('✅ MySQL Connected');
   
@@ -96,10 +100,4 @@ sequelize.sync({ alter: true }).then(async () => {
   app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 }).catch(err => {
   console.error('❌ Sync Error:', err.message);
-});
-
-// Add this right before sequelize.sync in app.js
-app.use((err, req, res, next) => {
-  console.error('🔥 Global Server Error:', err.stack);
-  res.status(500).send(`Server Error: ${err.message}`);
 });

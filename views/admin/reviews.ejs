@@ -3,7 +3,7 @@
 <div class="container my-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h2 class="fw-bold mb-1">
+      <h2 class="fw-bold mb-1 text-white">
         <i class="bi bi-star-fill text-warning me-2"></i>Technician Review Reports
       </h2>
       <p class="text-secondary small mb-0">System-wide customer feedback, technician ratings, and performance reports</p>
@@ -36,7 +36,7 @@
   </div>
 
   <!-- Reviews Table Card -->
-  <div class="card card-dark-blue shadow-sm">
+  <div class="card card-dark-blue shadow-sm border-0">
     <div class="card-header bg-transparent border-bottom border-secondary-subtle py-3 d-flex justify-content-between align-items-center">
       <h6 class="fw-bold mb-0 text-uppercase tracking-wider text-secondary small">
         <i class="bi bi-journal-text me-2"></i>Submitted Feedback Log
@@ -58,16 +58,20 @@
               </tr>
             </thead>
             <tbody>
-              <% reviews.forEach(r => { %>
+              <% reviews.forEach(r => { 
+                const techName = r.Technician ? r.Technician.name : (r.technician ? r.technician.name : 'Unassigned');
+                const custName = r.Customer ? r.Customer.name : (r.customer ? r.customer.name : 'Anonymous');
+                const ticketNumber = r.Ticket ? r.Ticket.id : (r.ticketId || 'N/A');
+              %>
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                   <td class="ps-4 text-secondary">
-                    <strong>#<%= r.Ticket ? r.Ticket.id : r.ticketId %></strong>
+                    <strong>#<%= ticketNumber %></strong>
                   </td>
                   <td class="fw-bold text-info">
-                    <%= r.technician ? r.technician.name : 'Unassigned' %>
+                    <%= techName %>
                   </td>
                   <td class="text-white">
-                    <%= r.customer ? r.customer.name : 'Anonymous' %>
+                    <%= custName %>
                   </td>
                   <td>
                     <span class="badge bg-warning text-dark px-2 py-1 fs-6">
@@ -75,7 +79,7 @@
                     </span>
                   </td>
                   <td class="text-secondary fw-semibold">
-                    <%= r.speedRating %>/5
+                    <%= r.speedRating ? r.speedRating + '/5' : 'N/A' %>
                   </td>
                   <td class="text-secondary small text-truncate" style="max-width: 280px;">
                     <%= r.comment || 'No comment provided.' %>

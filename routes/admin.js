@@ -11,19 +11,18 @@ const isAdmin = (req, res, next) => {
   res.status(403).send('Access denied. Admin privileges required.');
 };
 
-// Apply JWT authentication middleware to ALL admin routes in this file
+// Apply JWT authentication and admin middleware
 router.use(authenticateToken);
 router.use(isAdmin);
 
 // GET /admin/users - List all registered users
-router.get('/admin/users', async (req, res) => {
+router.get('/users', async (req, res) => {
   try {
     const users = await User.findAll({
       attributes: ['id', 'name', 'email', 'role', 'createdAt'],
       order: [['createdAt', 'DESC']]
     });
 
-    // Ensure req.user is passed so header.ejs knows the admin role
     res.render('admin/users', {
       user: req.user,
       users,
@@ -37,7 +36,7 @@ router.get('/admin/users', async (req, res) => {
 });
 
 // POST /admin/users/:id/role - Update user role
-router.post('/admin/users/:id/role', async (req, res) => {
+router.post('/users/:id/role', async (req, res) => {
   const userId = req.params.id;
   const { role } = req.body;
 
@@ -48,7 +47,6 @@ router.post('/admin/users/:id/role', async (req, res) => {
       return res.status(404).send('User not found.');
     }
 
-    // Prevent admin from demoting themselves
     if (targetUser.id === req.user.id && role !== 'admin') {
       const users = await User.findAll({ order: [['createdAt', 'DESC']] });
       return res.render('admin/users', {
@@ -59,7 +57,6 @@ router.post('/admin/users/:id/role', async (req, res) => {
       });
     }
 
-    // Validate role input
     if (!['user', 'tech', 'admin'].includes(role)) {
       return res.status(400).send('Invalid role selected.');
     }
@@ -74,8 +71,8 @@ router.post('/admin/users/:id/role', async (req, res) => {
   }
 });
 
-// GET /admin/reviews - Standalone review auditing route
-router.get('/admin/reviews', async (req, res) => {
+// GET /admin/reviews - Review auditing page
+router.get('/reviews', async (req, res) => {
   try {
     const reviews = await Review.findAll({
       include: [
